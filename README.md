@@ -1,6 +1,6 @@
 <div align="center">
 
-![Header](Assets/header-banner.svg)
+![Header](assets/header-banner.svg)
 
 [![Python](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![OpenCV](https://img.shields.io/badge/OpenCV-4.x-5c3ee8?style=for-the-badge&logo=opencv&logoColor=white)](https://opencv.org)
@@ -15,7 +15,7 @@
 
 ---
 
-![Divider](Assets/divider.svg)
+![Divider](assets/divider.svg)
 
 ## 🎮 Demo
 
@@ -36,7 +36,7 @@
 <tr>
 <td width="33%" align="center">
 
-![Gestures](Assets/feature-gestures.svg)
+![Gestures](assets/feature-gestures.svg)
 
 ### 🖐️ Gesture Recognition
 Intuitive hand gesture controls for steering, acceleration, and special actions
@@ -44,7 +44,7 @@ Intuitive hand gesture controls for steering, acceleration, and special actions
 </td>
 <td width="33%" align="center">
 
-![Realtime](Assets/feature-realtime.svg)
+![Realtime](assets/feature-realtime.svg)
 
 ### ⚡ Real-Time Tracking
 Smooth 30+ FPS hand tracking with minimal latency using MediaPipe
@@ -52,7 +52,7 @@ Smooth 30+ FPS hand tracking with minimal latency using MediaPipe
 </td>
 <td width="33%" align="center">
 
-![Customizable](Assets/feature-customizable.svg)
+![Customizable](assets/feature-customizable.svg)
 
 ### 🎛️ Fully Customizable
 Adjustable thresholds, sensitivity settings, and visual feedback
@@ -78,8 +78,8 @@ Adjustable thresholds, sensitivity settings, and visual feedback
 <!-- Add your screenshots here -->
 <!-- Example: -->
 <!-- <div align="center">
-  <img src="Assets/screenshot-1.png" width="45%" alt="Main Interface">
-  <img src="Assets/screenshot-2.png" width="45%" alt="Gesture Detection">
+  <img src="assets/screenshot-1.png" width="45%" alt="Main Interface">
+  <img src="assets/screenshot-2.png" width="45%" alt="Gesture Detection">
 </div> -->
 
 <div align="center">
@@ -102,7 +102,7 @@ Adjustable thresholds, sensitivity settings, and visual feedback
 
 ### Dependencies
 
-![Tech Stack](Assets/tech-stack.svg)
+![Tech Stack](assets/tech-stack.svg)
 
 ```
 opencv-python>=4.5.0
@@ -199,7 +199,7 @@ python main.py --no-gui             # Run without visual overlay
 
 ### Gesture Detection System
 
-![Gesture Diagram](Assets/gesture-diagram.svg)
+![Gesture Diagram](assets/gesture-diagram.svg)
 
 ### Steering Mechanism
 
@@ -317,7 +317,7 @@ gesture-control-game/
 ├── 📄 requirements.txt        # Python dependencies
 ├── 📄 README.md               # This file
 ├── 📄 LICENSE                 # MIT License
-└── 📁 Assets/                 # SVG assets and media
+└── 📁 assets/                 # SVG assets and media
     ├── header-banner.svg
     ├── feature-gestures.svg
     ├── feature-realtime.svg
@@ -430,7 +430,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 <div align="center">
 
-![Footer](Assets/footer-banner.svg)
+![Footer](assets/footer-banner.svg)
 
 **[⬆ Back to Top](#)**
 
