@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 300">
+  <defs>
+    <linearGradient id="diagBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d1117" />
+      <stop offset="100%" style="stop-color:#161b22" />
+    </linearGradient>
+    <linearGradient id="steerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#3fb950" />
+      <stop offset="50%" style="stop-color:#8b949e" />
+      <stop offset="100%" style="stop-color:#58a6ff" />
+    </linearGradient>
+  </defs>
+  
+  <rect width="600" height="300" fill="url(#diagBg)" rx="10"/>
+  
+  <!-- Title -->
+  <text x="300" y="30" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="bold" fill="#f0f6fc" text-anchor="middle">Gesture Controls</text>
+  
+  <!-- Steering Section -->
+  <g transform="translate(50, 50)">
+    <text x="80" y="15" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#8b949e" text-anchor="middle">STEERING</text>
+    
+    <!-- Left hand -->
+    <g transform="translate(20, 30)">
+      <rect x="0" y="0" width="50" height="70" rx="5" fill="#21262d" stroke="#3fb950" stroke-width="2"/>
+      <text x="25" y="45" font-family="monospace" font-size="24" fill="#3fb950" text-anchor="middle">↑</text>
+      <text x="25" y="85" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#8b949e" text-anchor="middle">Left High</text>
+    </g>
+    
+    <!-- Center -->
+    <g transform="translate(55, 30)">
+      <text x="25" y="40" font-family="'Segoe UI', Arial, sans-serif" font-size="20" fill="#f778ba">→</text>
+    </g>
+    
+    <!-- Right hand -->
+    <g transform="translate(90, 50)">
+      <rect x="0" y="0" width="50" height="70" rx="5" fill="#21262d" stroke="#58a6ff" stroke-width="2"/>
+      <text x="25" y="45" font-family="monospace" font-size="24" fill="#58a6ff" text-anchor="middle">↓</text>
+      <text x="25" y="85" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#8b949e" text-anchor="middle">Right Low</text>
+    </g>
+    
+    <text x="80" y="155" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#3fb950" text-anchor="middle">= STEER LEFT</text>
+  </g>
+  
+  <!-- Center/Neutral -->
+  <g transform="translate(220, 50)">
+    <text x="80" y="15" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#8b949e" text-anchor="middle">NEUTRAL</text>
+    
+    <g transform="translate(30, 40)">
+      <rect x="0" y="0" width="45" height="60" rx="5" fill="#21262d" stroke="#8b949e" stroke-width="2"/>
+      <rect x="55" y="0" width="45" height="60" rx="5" fill="#21262d" stroke="#8b949e" stroke-width="2"/>
+      <line x1="22" y1="30" x2="78" y2="30" stroke="#f0f6fc" stroke-width="2" stroke-dasharray="5,3"/>
+    </g>
+    
+    <text x="80" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#8b949e" text-anchor="middle">= NO STEERING</text>
+    <text x="80" y="140" font-family="'Segoe UI', Arial, sans-serif" font-size="9" fill="#6e7681" text-anchor="middle">(hands level)</text>
+  </g>
+  
+  <!-- Distance Section -->
+  <g transform="translate(400, 50)">
+    <text x="80" y="15" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#8b949e" text-anchor="middle">DISTANCE</text>
+    
+    <!-- Close -->
+    <g transform="translate(20, 30)">
+      <rect x="0" y="0" width="35" height="50" rx="5" fill="#21262d" stroke="#f778ba" stroke-width="2"/>
+      <rect x="40" y="0" width="35" height="50" rx="5" fill="#21262d" stroke="#f778ba" stroke-width="2"/>
+      <text x="37" y="70" font-family="'Segoe UI', Arial, sans-serif" font-size="9" fill="#f778ba" text-anchor="middle">CLOSE</text>
+    </g>
+    
+    <!-- Far -->
+    <g transform="translate(10, 90)">
+      <rect x="0" y="0" width="35" height="50" rx="5" fill="#21262d" stroke="#a371f7" stroke-width="2"/>
+      <rect x="60" y="0" width="35" height="50" rx="5" fill="#21262d" stroke="#a371f7" stroke-width="2"/>
+      <text x="47" y="70" font-family="'Segoe UI', Arial, sans-serif" font-size="9" fill="#a371f7" text-anchor="middle">FAR</text>
+    </g>
+  </g>
+  
+  <!-- Steering Bar Visualization -->
+  <g transform="translate(50, 200)">
+    <text x="250" y="15" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#8b949e" text-anchor="middle">Steering Indicator Bar</text>
+    
+    <rect x="50" y="30" width="400" height="30" rx="5" fill="#21262d"/>
+    <rect x="50" y="30" width="100" height="30" rx="5" fill="#238636" opacity="0.5"/>
+    <rect x="350" y="30" width="100" height="30" rx="5" fill="#1f6feb" opacity="0.5"/>
+    
+    <!-- Threshold lines -->
+    <line x1="150" y1="25" x2="150" y2="65" stroke="#3fb950" stroke-width="2"/>
+    <line x1="350" y1="25" x2="350" y2="65" stroke="#58a6ff" stroke-width="2"/>
+    <line x1="250" y1="30" x2="250" y2="60" stroke="#8b949e" stroke-width="1" stroke-dasharray="3,2"/>
+    
+    <!-- Ball indicator -->
+    <circle cx="250" cy="45" r="12" fill="#f0f6fc">
+      <animate attributeName="cx" values="250;150;250;350;250" dur="4s" repeatCount="indefinite"/>
+    </circle>
+    
+    <!-- Labels -->
+    <text x="100" y="80" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#3fb950" text-anchor="middle">LEFT</text>
+    <text x="250" y="80" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#8b949e" text-anchor="middle">CENTER</text>
+    <text x="400" y="80" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#58a6ff" text-anchor="middle">RIGHT</text>
+  </g>
+</svg>

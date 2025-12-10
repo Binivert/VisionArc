@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80">
+  <defs>
+    <linearGradient id="custGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#a371f7" />
+      <stop offset="100%" style="stop-color:#8957e5" />
+    </linearGradient>
+  </defs>
+  <circle cx="40" cy="40" r="38" fill="#0d1117" stroke="url(#custGrad)" stroke-width="2"/>
+  <g transform="translate(20, 20)">
+    <!-- Gear icon -->
+    <path d="M20 8 L22 8 L23 4 L27 4 L28 8 L30 9 L33 6 L36 9 L33 12 L34 14 L38 15 L38 19 L34 20 L33 22 L36 25 L33 28 L30 25 L28 26 L27 30 L23 30 L22 26 L20 25 L17 28 L14 25 L17 22 L16 20 L12 19 L12 15 L16 14 L17 12 L14 9 L17 6 L20 9 Z" 
+          fill="none" stroke="#a371f7" stroke-width="2">
+      <animateTransform attributeName="transform" type="rotate" from="0 25 17" to="360 25 17" dur="10s" repeatCount="indefinite"/>
+    </path>
+    <circle cx="25" cy="17" r="6" fill="none" stroke="#a371f7" stroke-width="2">
+      <animateTransform attributeName="transform" type="rotate" from="360 25 17" to="0 25 17" dur="10s" repeatCount="indefinite"/>
+    </circle>
+    <!-- Sliders -->
+    <rect x="8" y="32" width="24" height="3" rx="1.5" fill="#30363d"/>
+    <circle cx="20" cy="33.5" r="4" fill="#a371f7">
+      <animate attributeName="cx" values="20;28;12;20" dur="3s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+</svg>

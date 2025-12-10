@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 100">
+  <defs>
+    <linearGradient id="footBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d1117" />
+      <stop offset="100%" style="stop-color:#161b22" />
+    </linearGradient>
+    <linearGradient id="footText" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#58a6ff" />
+      <stop offset="100%" style="stop-color:#a371f7" />
+    </linearGradient>
+  </defs>
+  
+  <rect width="800" height="100" fill="url(#footBg)"/>
+  
+  <!-- Decorative line -->
+  <line x1="100" y1="15" x2="700" y2="15" stroke="#30363d" stroke-width="1"/>
+  
+  <!-- Made with love -->
+  <text x="400" y="50" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#8b949e" text-anchor="middle">
+    Made with 
+    <tspan fill="#f778ba">♥</tspan>
+    using Python &amp; MediaPipe
+  </text>
+  
+  <!-- Stars reminder -->
+  <text x="400" y="75" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#6e7681" text-anchor="middle">
+    If you found this useful, consider giving it a ⭐
+  </text>
+</svg>
