@@ -317,15 +317,7 @@ gesture-control-game/
 ├── 📄 requirements.txt        # Python dependencies
 ├── 📄 README.md               # This file
 ├── 📄 LICENSE                 # MIT License
-└── 📁 assets/                 # SVG assets and media
-    ├── header-banner.svg
-    ├── feature-gestures.svg
-    ├── feature-realtime.svg
-    ├── feature-customizable.svg
-    ├── gesture-diagram.svg
-    ├── tech-stack.svg
-    ├── divider.svg
-    └── footer-banner.svg
+
 ```
 
 ---
