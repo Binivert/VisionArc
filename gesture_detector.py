@@ -28,8 +28,8 @@ class Hand:
 class GestureState:
     steer_left: bool = False
     steer_right: bool = False
-    # This is the actual steering value (degrees-like), centered at 0.
     steering_angle: float = 0.0
+    steering_force: float = 0.0  # Progressive force 0.0 to 1.0
     hands_close: bool = False
     hands_far: bool = False
     hands_distance: float = 0.0
@@ -144,29 +144,44 @@ class GestureDetector:
         backward = thumb_ext and not index_ext and not middle_ext and not ring_ext and not pinky_ext
         return forward, backward
 
-    # --------------------------------------------------------------
-    # Steering computation: use vertical wrist difference
-    # --------------------------------------------------------------
     def _calculate_steering_angle(
         self, left_wrist: Tuple[float, float], right_wrist: Tuple[float, float]
     ) -> float:
-        """Return a pseudo-angle proportional to vertical wrist difference.
-
-        We use only dy between wrists to get a stable, smooth steering value.
-
-        - dy < 0: right wrist higher than left -> positive steering (right)
-        - dy > 0: left wrist higher than right -> negative steering (left)
-
-        When both wrists are at the same vertical height (straight line),
-        dy = 0 => angle_deg = 0 => center of the bar.
-        """
-        dy = right_wrist[1] - left_wrist[1]  # image coords: y grows downward
-
-        # Scale dy into something like degrees. Tune with
-        # thresholds['steering_dy_scale'] if needed.
+        """Return a pseudo-angle proportional to vertical wrist difference."""
+        dy = right_wrist[1] - left_wrist[1]
         scale = self.thresholds.get('steering_dy_scale', 180.0)
         angle_deg = -dy * scale
         return angle_deg
+
+    def _calculate_progressive_force(self, normalized_pos: float) -> float:
+        """Calculate progressive steering force based on position.
+        
+        Force increases linearly from dead zone edge to outer edge.
+        
+        Args:
+            normalized_pos: Position in [-1, 1] where 0 is center
+            
+        Returns:
+            Force value in [0, 1]
+        """
+        dead_zone = self.thresholds.get('dead_zone_ratio', 0.3)
+        
+        abs_pos = abs(normalized_pos)
+        
+        # Inside dead zone - no force
+        if abs_pos <= dead_zone:
+            return 0.0
+        
+        # Calculate position within active steering zone
+        # 0 at dead zone edge, 1 at full edge
+        active_range = 1.0 - dead_zone
+        if active_range <= 0:
+            return 0.0
+        
+        # Linear progression from dead zone edge to outer edge
+        force = (abs_pos - dead_zone) / active_range
+        
+        return min(1.0, max(0.0, force))
 
     def process(self, frame: np.ndarray, use_stability: bool = True) -> Tuple[GestureState, np.ndarray]:
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -186,7 +201,6 @@ class GestureDetector:
                 label = info.classification[0].label
                 hand = self._extract(lm, label)
                 if label == "Left":
-                    # MediaPipe's "Left" is usually the right side on screen
                     self.right = hand
                     s.right_detected = True
                 else:
@@ -235,34 +249,34 @@ class GestureDetector:
             if s.hands_far:
                 active.append("FAR")
 
-            # Steering: dy-based pseudo-angle, then smoothing, centered at 0
+            # Steering calculation
             raw_angle = self._calculate_steering_angle(self.left.wrist, self.right.wrist)
             smooth_angle = self.steer_smooth.add(raw_angle)
-
-            # This is the value you see as `val:`. When hands are straight,
-            # smooth_angle ~ 0, so ball is at center.
             s.steering_angle = smooth_angle
 
-            # Centered value used for thresholds and ball position
-            ang = smooth_angle  # 0 degrees IS the center; no extra offset
-
-            # Turn on/off left/right steering using this centered angle
-            sens_steer = self.sensitivity.get('steering', 1.0)
-            steer_t = self.thresholds.get('steering_angle', 35.0) / sens_steer
-
-            s.steer_left = check('steer_l', ang < -steer_t)
-            s.steer_right = check('steer_r', ang > steer_t)
+            # Normalize to [-1, 1]
+            max_display_angle = self.thresholds.get('visual_max_angle', 60.0)
+            normalized = max(-1.0, min(1.0, smooth_angle / max_display_angle))
+            
+            # Calculate progressive force (0 in dead zone, increases linearly outside)
+            s.steering_force = self._calculate_progressive_force(normalized)
+            
+            # Get dead zone parameter
+            dead_zone = self.thresholds.get('dead_zone_ratio', 0.3)
+            
+            # Steer left/right when outside dead zone (ANY amount of force triggers steering)
+            # The force level determines PWM duty cycle, not whether to steer
+            s.steer_left = check('steer_l', normalized < -dead_zone)
+            s.steer_right = check('steer_r', normalized > dead_zone)
 
             if s.steer_left:
-                active.append("STEER-L")
+                active.append(f"STEER-L ({s.steering_force:.0%})")
             if s.steer_right:
-                active.append("STEER-R")
+                active.append(f"STEER-R ({s.steering_force:.0%})")
 
-            # Update visual ball position smoothly in [-1, 1]
-            max_display_angle = self.thresholds.get('visual_max_angle', 60.0)
-            target_norm = max(-1.0, min(1.0, ang / max_display_angle))
-            alpha = 0.25  # visual smoothing factor
-            self.visual_steer_pos += (target_norm - self.visual_steer_pos) * alpha
+            # Update visual ball position smoothly
+            alpha = 0.25
+            self.visual_steer_pos += (normalized - self.visual_steer_pos) * alpha
 
         s.active = active
         self.state = s
@@ -270,7 +284,9 @@ class GestureDetector:
 
     def draw(self, frame: np.ndarray, skeleton: bool = True, trails: bool = True) -> np.ndarray:
         h, w = frame.shape[:2]
-        steer_thresh = self.thresholds.get('steering_angle', 35.0)
+        
+        # Get zone parameters
+        dead_zone = self.thresholds.get('dead_zone_ratio', 0.3)
 
         def draw_hand(hand: Hand, color, highlight):
             if not skeleton:
@@ -333,128 +349,88 @@ class GestureDetector:
             bar_center = (bar_left + bar_right) // 2
 
             # Background bar
-            cv2.rectangle(
-                frame,
-                (bar_left, bar_y - 20),
-                (bar_right, bar_y + 20),
-                (50, 50, 50),
-                -1,
-            )
-            cv2.rectangle(
-                frame,
-                (bar_left, bar_y - 20),
-                (bar_right, bar_y + 20),
-                (80, 80, 100),
-                2,
-            )
+            cv2.rectangle(frame, (bar_left, bar_y - 20), (bar_right, bar_y + 20), (50, 50, 50), -1)
+            cv2.rectangle(frame, (bar_left, bar_y - 20), (bar_right, bar_y + 20), (80, 80, 100), 2)
 
-            # Map threshold angle to x positions
-            max_display_angle = self.thresholds.get('visual_max_angle', 60.0)
-            thresh_ratio = min(steer_thresh / max_display_angle, 0.95)
-            left_thresh_x = int(bar_center - thresh_ratio * (bar_width / 2))
-            right_thresh_x = int(bar_center + thresh_ratio * (bar_width / 2))
+            # Calculate dead zone boundaries in pixels
+            dead_half = int(dead_zone * bar_width / 2)
+            left_dead = bar_center - dead_half
+            right_dead = bar_center + dead_half
 
-            # Left/Right/Neutral zones
-            cv2.rectangle(
-                frame,
-                (bar_left, bar_y - 18),
-                (left_thresh_x, bar_y + 18),
-                (0, 100, 50),
-                -1,
-            )
-            cv2.rectangle(
-                frame,
-                (right_thresh_x, bar_y - 18),
-                (bar_right, bar_y + 18),
-                (50, 50, 120),
-                -1,
-            )
-            cv2.rectangle(
-                frame,
-                (left_thresh_x, bar_y - 18),
-                (right_thresh_x, bar_y + 18),
-                (80, 80, 80),
-                -1,
-            )
+            # Draw gradient zones - left side (green gradient)
+            for x in range(bar_left, left_dead):
+                # Calculate intensity based on distance from dead zone
+                dist_from_dead = left_dead - x
+                max_dist = left_dead - bar_left
+                if max_dist > 0:
+                    intensity = dist_from_dead / max_dist
+                else:
+                    intensity = 0
+                g = int(60 + 140 * intensity)  # Green increases toward edge
+                cv2.line(frame, (x, bar_y - 18), (x, bar_y + 18), (0, g, 40), 1)
 
-            # Threshold lines + center line
-            cv2.line(
-                frame,
-                (left_thresh_x, bar_y - 20),
-                (left_thresh_x, bar_y + 20),
-                (0, 255, 100),
-                3,
-            )
-            cv2.line(
-                frame,
-                (right_thresh_x, bar_y - 20),
-                (right_thresh_x, bar_y + 20),
-                (100, 100, 255),
-                3,
-            )
-            cv2.line(
-                frame,
-                (bar_center, bar_y - 15),
-                (bar_center, bar_y + 15),
-                (200, 200, 200),
-                1,
-            )
+            # Dead zone (center - gray)
+            cv2.rectangle(frame, (left_dead, bar_y - 18), (right_dead, bar_y + 18), (70, 70, 70), -1)
 
-            # Ball position from visual_steer_pos in [-1, 1]
+            # Draw gradient zones - right side (blue gradient)
+            for x in range(right_dead, bar_right):
+                # Calculate intensity based on distance from dead zone
+                dist_from_dead = x - right_dead
+                max_dist = bar_right - right_dead
+                if max_dist > 0:
+                    intensity = dist_from_dead / max_dist
+                else:
+                    intensity = 0
+                b = int(60 + 140 * intensity)  # Blue increases toward edge
+                cv2.line(frame, (x, bar_y - 18), (x, bar_y + 18), (40, 40, b), 1)
+
+            # Zone boundary lines
+            cv2.line(frame, (left_dead, bar_y - 20), (left_dead, bar_y + 20), (100, 200, 100), 2)
+            cv2.line(frame, (right_dead, bar_y - 20), (right_dead, bar_y + 20), (100, 100, 200), 2)
+            cv2.line(frame, (bar_center, bar_y - 15), (bar_center, bar_y + 15), (200, 200, 200), 1)
+
+            # Ball position
             angle_norm = max(-1.0, min(1.0, self.visual_steer_pos))
             indicator_x = int(bar_center + angle_norm * (bar_width / 2))
             indicator_x = max(bar_left + 12, min(bar_right - 12, indicator_x))
 
-            # Color and label depending on steering state
+            # Ball color based on force level
+            force = self.state.steering_force
             if self.state.steer_left:
-                ind_color = (0, 255, 100)
-                cv2.putText(
-                    frame,
-                    "<< LEFT",
-                    (bar_left, bar_y - 30),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.7,
-                    ind_color,
-                    2,
-                )
+                # Green intensity based on force
+                g = int(100 + 155 * force)
+                ind_color = (0, g, int(50 + 50 * force))
+                cv2.putText(frame, f"<< LEFT {force:.0%}", (bar_left, bar_y - 30),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.6, ind_color, 2)
             elif self.state.steer_right:
-                ind_color = (100, 100, 255)
-                cv2.putText(
-                    frame,
-                    "RIGHT >>",
-                    (bar_right - 140, bar_y - 30),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.7,
-                    ind_color,
-                    2,
-                )
+                # Blue intensity based on force
+                b = int(100 + 155 * force)
+                ind_color = (int(50 + 50 * force), int(50 + 50 * force), b)
+                cv2.putText(frame, f"RIGHT {force:.0%} >>", (bar_right - 150, bar_y - 30),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.6, ind_color, 2)
             else:
-                ind_color = (200, 200, 200)
+                ind_color = (180, 180, 180)
 
-            # Draw ball
+            # Draw ball with glow effect based on force
+            if force > 0:
+                glow_radius = int(14 + 8 * force)
+                glow_color = tuple(int(c * 0.4) for c in ind_color)
+                cv2.circle(frame, (indicator_x, bar_y), glow_radius, glow_color, -1)
+            
             cv2.circle(frame, (indicator_x, bar_y), 14, ind_color, -1)
             cv2.circle(frame, (indicator_x, bar_y), 14, (255, 255, 255), 2)
 
-            # Debug text: steering value (should be ~0 at straight hands)
+            # Debug text
             ang = self.state.steering_angle
-            cv2.putText(
-                frame,
-                f"val: {ang:5.1f}",
-                (bar_center - 40, bar_y + 45),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.5,
-                (200, 200, 200),
-                1,
-            )
-            cv2.putText(
-                frame,
-                "STEER",
-                (bar_left - 5, bar_y - 25),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.4,
-                (150, 150, 150),
-                1,
-            )
+            cv2.putText(frame, f"angle: {ang:5.1f}  force: {force:.0%}",
+                       (bar_center - 100, bar_y + 45),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.45, (180, 180, 180), 1)
+            cv2.putText(frame, "STEER", (bar_left - 5, bar_y - 25),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.4, (150, 150, 150), 1)
+            
+            # Zone labels
+            cv2.putText(frame, "DEAD", (bar_center - 20, bar_y + 5),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.35, (120, 120, 120), 1)
 
         return frame
 
