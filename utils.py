@@ -63,3 +63,4 @@ class Trail:
 KEY_NAMES = {'space':'SPACE','shift':'SHIFT','ctrl':'CTRL','alt':'ALT','up':'UP','down':'DOWN','left':'LEFT','right':'RIGHT'}
 def key_display(k: str) -> str:
     return KEY_NAMES.get(k.lower(), k.upper())
+  
