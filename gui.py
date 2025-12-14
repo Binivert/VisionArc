@@ -228,7 +228,9 @@ class App:
         self.gest_lbl = tk.Label(gest, text="None", bg=COLORS['bg_card'], fg=COLORS['success'], font=('Consolas', 15, 'bold'), wraplength=600)
         self.gest_lbl.pack(anchor=tk.W, padx=25, pady=(0, 8))
         self.pressed_lbl = tk.Label(gest, text="Keys: None", bg=COLORS['bg_card'], fg=COLORS['warning'], font=('Consolas', 12))
-        self.pressed_lbl.pack(anchor=tk.W, padx=25, pady=(0, 15))
+        self.pressed_lbl.pack(anchor=tk.W, padx=25, pady=(0, 8))
+        self.force_lbl = tk.Label(gest, text="Steering: 0% | Pulse: OFF", bg=COLORS['bg_card'], fg=COLORS['accent'], font=('Consolas', 12))
+        self.force_lbl.pack(anchor=tk.W, padx=25, pady=(0, 15))
         info = tk.Frame(parent, bg=COLORS['bg_card'])
         info.pack(fill=tk.X, pady=5)
         tk.Label(info, text="💡 GESTURES: Forward=Point 2 fingers | Backward=Thumbs up | Steer=Tilt hands", bg=COLORS['bg_card'], fg=COLORS['text_dim'], font=('Segoe UI', 10)).pack(padx=15, pady=10)
@@ -252,6 +254,30 @@ class App:
             entry = tk.Entry(row, width=8, bg=COLORS['bg_medium'], fg=COLORS['accent'], font=('Consolas', 11), relief=tk.FLAT, insertbackground=COLORS['accent'])
             entry.pack(side=tk.RIGHT, padx=5)
             self.key_entries[key] = entry
+
+        # STEERING ZONES CARD
+        card = self._card(c, "STEERING ZONES")
+        
+        # Dead zone width slider
+        row = tk.Frame(card, bg=COLORS['bg_card'])
+        row.pack(fill=tk.X, padx=12, pady=6)
+        tk.Label(row, text="Dead Zone (Center)", bg=COLORS['bg_card'], fg=COLORS['text'], font=('Segoe UI', 10)).pack(anchor=tk.W)
+        self.dead_zone_var = tk.DoubleVar(value=self.cfg.thresholds.get('dead_zone_ratio', 0.3))
+        NeonSlider(row, self.dead_zone_var, from_=0.1, to=0.6, width=320, height=36).pack(anchor=tk.W, pady=(4, 0))
+        self.dead_zone_lbl = tk.Label(row, text=f"{self.dead_zone_var.get():.0%}", bg=COLORS['bg_card'], fg=COLORS['accent'], font=('Consolas', 10))
+        self.dead_zone_lbl.pack(anchor=tk.E)
+        self.dead_zone_var.trace_add('write', self._on_zone_change)
+        
+        # Steering strength slider (controls PWM aggressiveness)
+        row = tk.Frame(card, bg=COLORS['bg_card'])
+        row.pack(fill=tk.X, padx=12, pady=6)
+        tk.Label(row, text="Steering Strength", bg=COLORS['bg_card'], fg=COLORS['text'], font=('Segoe UI', 10)).pack(anchor=tk.W)
+        self.steer_strength_var = tk.DoubleVar(value=self.cfg.sensitivity.get('steering_strength', 1.0))
+        NeonSlider(row, self.steer_strength_var, from_=0.5, to=2.0, width=320, height=36).pack(anchor=tk.W, pady=(4, 0))
+        self.steer_strength_lbl = tk.Label(row, text=f"{self.steer_strength_var.get():.1f}x", bg=COLORS['bg_card'], fg=COLORS['accent'], font=('Consolas', 10))
+        self.steer_strength_lbl.pack(anchor=tk.E)
+        self.steer_strength_var.trace_add('write', self._on_strength_change)
+
         card = self._card(c, "THRESHOLDS")
         self.thresh_vars = {}
         thresholds = [("steering_angle", "Steering Angle", 15, 50), ("finger_extend_thresh", "Finger Extend", 0.02, 0.12), ("hands_close_dist", "Hands Close", 0.05, 0.25), ("hands_far_dist", "Hands Far", 0.40, 0.70), ("stability_delay", "Stability (s)", 0.08, 0.30)]
@@ -276,6 +302,31 @@ class App:
         NeonButton(btn_frame, "💾 SAVE", self._save, width=160, height=48).pack(side=tk.LEFT, padx=(0, 10))
         NeonButton(btn_frame, "↺ RESET", self._reset, width=160, height=48, primary=False).pack(side=tk.LEFT)
         tk.Frame(c, height=30, bg=COLORS['bg_medium']).pack()
+
+    def _on_zone_change(self, *args):
+        """Handle zone slider changes in real-time."""
+        dead = self.dead_zone_var.get()
+        
+        self.dead_zone_lbl.config(text=f"{dead:.0%}")
+        
+        # Update config
+        self.cfg.thresholds['dead_zone_ratio'] = dead
+        
+        # Update detector if running
+        if self.detector:
+            self.detector.update_thresholds(self.cfg.thresholds)
+
+    def _on_strength_change(self, *args):
+        """Handle steering strength slider changes in real-time."""
+        strength = self.steer_strength_var.get()
+        
+        self.steer_strength_lbl.config(text=f"{strength:.1f}x")
+        
+        # Update config
+        self.cfg.sensitivity['steering_strength'] = strength
+        
+        # Update keyboard controller
+        self.keyboard.set_steering_strength(strength)
 
     def _card(self, parent, title):
         card = tk.Frame(parent, bg=COLORS['bg_card'])
@@ -302,6 +353,10 @@ class App:
         self.opt_vars["Stability Filter"].set(self.cfg.stability_mode)
         self.cam_var.set(str(self.cfg.camera_index))
         self.maxk_var.set(str(self.cfg.max_keys))
+        # Load zone values
+        self.dead_zone_var.set(self.cfg.thresholds.get('dead_zone_ratio', 0.3))
+        self.steer_strength_var.set(self.cfg.sensitivity.get('steering_strength', 1.0))
+        self.keyboard.set_steering_strength(self.steer_strength_var.get())
 
     def _maxk_change(self):
         try:
@@ -317,6 +372,7 @@ class App:
             self.detector.update_thresholds(self.cfg.thresholds)
             self.detector.update_sensitivity(self.cfg.sensitivity)
         self.keyboard.set_max(self.cfg.max_keys)
+        self.keyboard.set_steering_strength(self.cfg.sensitivity.get('steering_strength', 1.0))
         messagebox.showinfo("Profile", f"{name.upper()} profile loaded!")
 
     def _save(self):
@@ -328,6 +384,9 @@ class App:
             self.cfg.thresholds[k] = v.get()
         for k, v in self.sens_vars.items():
             self.cfg.sensitivity[k] = v.get()
+        # Save zone values
+        self.cfg.thresholds['dead_zone_ratio'] = self.dead_zone_var.get()
+        self.cfg.sensitivity['steering_strength'] = self.steer_strength_var.get()
         if self.detector:
             self.detector.update_thresholds(self.cfg.thresholds)
             self.detector.update_sensitivity(self.cfg.sensitivity)
@@ -370,6 +429,7 @@ class App:
         self.hands_lbl.config(text="Hands: None")
         self.gest_lbl.config(text="None")
         self.pressed_lbl.config(text="Keys: None")
+        self.force_lbl.config(text="Steering: 0% | Pulse: OFF")
 
     def _loop(self):
         if not self.running or not self.cap: return
@@ -404,18 +464,55 @@ class App:
         self.gest_lbl.config(text="  |  ".join(self.state.active) if self.state.active else "None")
         pressed = self.keyboard.get_pressed()
         self.pressed_lbl.config(text=f"Keys: {' + '.join(key_display(k) for k in pressed) if pressed else 'None'}")
+        
+        # Show steering force and pulse state
+        force = self.state.steering_force
+        pulse_state = "OFF"
+        steer_key = None
+        if self.state.steer_left:
+            steer_key = self.cfg.keybindings.get('steer_left', '')
+        elif self.state.steer_right:
+            steer_key = self.cfg.keybindings.get('steer_right', '')
+        
+        if steer_key:
+            pwm = self.keyboard.get_pwm_state(steer_key)
+            if pwm:
+                pulse_state = "ON" if pwm['is_on'] else "off"
+        
+        self.force_lbl.config(text=f"Steering: {force:.0%} | Pulse: {pulse_state}")
         self.root.after(1, self._loop)
 
     def _handle_gestures(self):
         s = self.state
-        mapping = {
-            'steer_left': s.steer_left, 'steer_right': s.steer_right,
+        
+        # Handle steering with PWM
+        steer_left_key = self.cfg.keybindings.get('steer_left', '')
+        steer_right_key = self.cfg.keybindings.get('steer_right', '')
+        
+        # PWM steering for left
+        if s.steer_left and self.gesture_enabled.get('steer_left', tk.BooleanVar(value=True)).get():
+            if steer_left_key:
+                self.keyboard.press_pwm(steer_left_key, s.steering_force)
+        else:
+            if steer_left_key:
+                self.keyboard.release(steer_left_key)
+        
+        # PWM steering for right
+        if s.steer_right and self.gesture_enabled.get('steer_right', tk.BooleanVar(value=True)).get():
+            if steer_right_key:
+                self.keyboard.press_pwm(steer_right_key, s.steering_force)
+        else:
+            if steer_right_key:
+                self.keyboard.release(steer_right_key)
+        
+        # Handle other gestures (non-PWM)
+        other_mapping = {
             'hands_close': s.hands_close, 'hands_far': s.hands_far,
             'left_forward': s.left_forward, 'left_backward': s.left_backward,
             'right_forward': s.right_forward, 'right_backward': s.right_backward,
         }
         new_active = set()
-        for gesture, active in mapping.items():
+        for gesture, active in other_mapping.items():
             if not self.gesture_enabled.get(gesture, tk.BooleanVar(value=True)).get(): continue
             key = self.cfg.keybindings.get(gesture, '')
             if not key: continue
@@ -424,7 +521,8 @@ class App:
             elif key in self.active_keys:
                 self.keyboard.release(key)
         for key in self.active_keys - new_active:
-            self.keyboard.release(key)
+            if key not in [steer_left_key, steer_right_key]:
+                self.keyboard.release(key)
         self.active_keys = new_active
 
     def _close(self):
@@ -434,6 +532,8 @@ class App:
         self.cfg.mirror_mode = self.opt_vars["Mirror Mode"].get()
         self.cfg.stability_mode = self.opt_vars["Stability Filter"].get()
         self.cfg.camera_index = int(self.cam_var.get())
+        self.cfg.thresholds['dead_zone_ratio'] = self.dead_zone_var.get()
+        self.cfg.sensitivity['steering_strength'] = self.steer_strength_var.get()
         self.cfg.save()
         self.root.destroy()
 
