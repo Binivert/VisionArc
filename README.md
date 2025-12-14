@@ -411,6 +411,6 @@ python -m pytest tests/
 
 ![Footer](assets/footer-banner.svg)
 
-**[⬆ Back to Top](#)**
+
 
 </div>
