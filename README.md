@@ -316,7 +316,7 @@ gesture-control-game/
 ├── 📄 config.json             # User configuration
 ├── 📄 requirements.txt        # Python dependencies
 ├── 📄 README.md               # This file
-├── 📄 LICENSE                 # MIT License
+
 
 ```
 
@@ -406,19 +406,6 @@ python -m pytest tests/
 
 ---
 
-## 📜 License
-
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- [MediaPipe](https://mediapipe.dev/) - Hand tracking ML solution by Google
-- [OpenCV](https://opencv.org/) - Computer vision library
-- [NumPy](https://numpy.org/) - Numerical computing
-
----
 
 <div align="center">
 
