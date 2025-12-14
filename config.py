@@ -34,12 +34,16 @@ DEFAULT_THRESHOLDS = {
     "hands_far_dist": 0.55,
     "finger_extend_thresh": 0.06,
     "stability_delay": 0.18,
+    "dead_zone_ratio": 0.3,
+    "visual_max_angle": 60.0,
+    "steering_dy_scale": 180.0,
 }
 
 DEFAULT_SENSITIVITY = {
     "steering": 1.0,
     "fingers": 1.0,
     "distance": 1.0,
+    "steering_strength": 1.0,
 }
 
 PROFILES = {
@@ -47,16 +51,22 @@ PROFILES = {
         "max_keys": 4,
         "stability_delay": 0.15,
         "steering_angle": 30.0,
+        "dead_zone_ratio": 0.25,
+        "steering_strength": 1.5,
     },
     "action": {
         "max_keys": 3,
         "stability_delay": 0.18,
         "steering_angle": 35.0,
+        "dead_zone_ratio": 0.3,
+        "steering_strength": 1.0,
     },
     "casual": {
         "max_keys": 2,
         "stability_delay": 0.22,
         "steering_angle": 40.0,
+        "dead_zone_ratio": 0.35,
+        "steering_strength": 0.8,
     },
 }
 
@@ -100,9 +110,11 @@ class Config:
         if name in PROFILES:
             p = PROFILES[name]
             self.max_keys = p.get("max_keys", self.max_keys)
-            for key in ["stability_delay", "steering_angle"]:
+            for key in ["stability_delay", "steering_angle", "dead_zone_ratio"]:
                 if key in p:
                     self.thresholds[key] = p[key]
+            if "steering_strength" in p:
+                self.sensitivity["steering_strength"] = p["steering_strength"]
 
     def reset(self):
         self.keybindings = DEFAULT_KEYBINDINGS.copy()
