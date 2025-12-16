@@ -70,23 +70,7 @@ Adjustable thresholds, sensitivity settings, and visual feedback
 - 🔧 **Easy Calibration** - Auto-centering and manual threshold adjustment
 - 💾 **Persistent Settings** - Your preferences are saved between sessions
 
----
 
-## 📸 Screenshots
-
-<!-- SCREENSHOT PLACEHOLDER -->
-<!-- Add your screenshots here -->
-<!-- Example: -->
-<!-- <div align="center">
-  <img src="assets/screenshot-1.png" width="45%" alt="Main Interface">
-  <img src="assets/screenshot-2.png" width="45%" alt="Gesture Detection">
-</div> -->
-
-<div align="center">
-  <i>📷 Screenshots coming soon...</i>
-</div>
-
----
 
 ## 🔧 Requirements
 
