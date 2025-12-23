@@ -19,10 +19,8 @@
 
 ## 🎮 Demo
 
-<!-- VIDEO PLACEHOLDER -->
-<!-- Replace this comment with your demo video -->
-<!-- Example: -->
-<!-- https://github.com/user-attachments/assets/your-video-id -->
+![visision demo - Made with Clipchamp](https://github.com/user-attachments/assets/5ede9226-fbfb-41f7-a073-54d241013877)
+
 
 <div align="center">
   <i>📹 Demo video coming soon...</i>
