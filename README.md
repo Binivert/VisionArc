@@ -19,7 +19,10 @@
 
 ## 🎮 Demo
 
-[![Demo video](assets/demo.png)](assets/Demo.mp4)
+
+https://github.com/user-attachments/assets/061d0838-686e-41cb-93e4-fcb6ed97b573
+
+
 
 
 
