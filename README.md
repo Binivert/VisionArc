@@ -10,7 +10,7 @@
 **Control games and applications using hand gestures detected through your webcam**
 
 [Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [How It Works](#-how-it-works) • [Configuration](#%EF%B8%8F-configuration)
-
+![Divider](assets/divider.svg)
 </div>
 
 ---
