@@ -19,7 +19,9 @@
 
 ## 🎮 Demo
 
-![visision demo - Made with Clipchamp](https://github.com/user-attachments/assets/5ede9226-fbfb-41f7-a073-54d241013877)
+[![Demo video](assets/demo.png)](assets/Demo.mp4)
+
+
 
 
 <div align="center">
